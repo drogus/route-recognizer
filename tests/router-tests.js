@@ -155,9 +155,30 @@ test("supports star routes", function() {
   });
 });
 
+test("properly match star route when there's dynamic route, which also matches it", function() {
+  router.map(function(match) {
+    match("/search/*phrase").to("search");
+    match("/:foo/:bar").to("foobar");
+  });
+
+  matchesRoute("/foo/bar", [{ handler: "foobar", params: {foo: 'foo', bar: 'bar'}, isDynamic: true}]);
+  matchesRoute("/search/some phrase", [{ handler: "search", params: {phrase: 'some phrase'}, isDynamic: true}]);
+  matchesRoute("/search/some-phrase", [{ handler: "search", params: {phrase: 'some-phrase'}, isDynamic: true}]);
+});
+
+test("properly match dynamic route when there's dunamic route with more segments also matching it", function() {
+  router.map(function(match) {
+    match("/post/:id").to("post");
+    match("/:foo/:bar").to("foobar");
+  });
+
+  matchesRoute("/post/1", [{ handler: "post", params: {id: '1'}, isDynamic: true}]);
+  matchesRoute("/foo/bar", [{ handler: "foobar", params: {foo: 'foo', bar: 'bar'}, isDynamic: true}]);
+});
+
 test("star route does not swallow trailing `/`", function() {
   var r;
-  
+
   router.map(function(match) {
     match("/").to("posts");
     match("/*everything").to("glob");
